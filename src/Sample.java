@@ -1,14 +1,26 @@
 import java.util.*;
 
+/**
+ * The Sample class which stores information about individual samples run in the mass spectrometer. For the purposes of
+ * our study, four experimental groups are defined, LF/LB/HF/HB, where LF represents a low fat diet, HF represents a
+ * high fat diet, and LB/HB represent the respective diets with 1.5X BCAA supplementation for 12 weeks.
+ * @author David Zhao
+ * @author https://github.com/david-zhao-0
+ * 
+ * @param name name of the sample 
+ * @param sampleType for our experiments we distinguished between LF/LB/HF/HB
+ * @param metabolites the metabolites to consider for this sample
+ * 
+ */
+
 public class Sample {
 	private String name;
 	private String sampleType;
-	private int sortOrder;
 	private List<Metabolite> metabolites;
 	
-	public Sample(String name) {
+	public Sample(String name, List<Metabolite> metaboliteList) {
 		this.name = name;
-		this.metabolites = new ArrayList<Metabolite>();
+		this.metabolites = metaboliteList;
 	}
 	
 	// Copy constructor
