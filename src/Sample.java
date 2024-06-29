@@ -13,7 +13,7 @@ import java.util.*;
  * 
  */
 
-public class Sample {
+public class Sample implements Comparable<Sample> {
 	private String name;
 	private String sampleType;
 	private List<Metabolite> metabolites;
@@ -87,5 +87,11 @@ public class Sample {
 	
 	public void setMetaboliteList(ArrayList<Metabolite> mList) {
 		this.metabolites = (List<Metabolite>) mList.clone();		
+	}
+
+	@Override
+	public int compareTo(Sample o) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'compareTo'");
 	}
 }
