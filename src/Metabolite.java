@@ -1,5 +1,3 @@
-import java.util.HashMap;
-
 /**
  * The Metabolite class which stores metabolite information and peak data. This class only supports the
  * comparison of two peaks for each metabolite.

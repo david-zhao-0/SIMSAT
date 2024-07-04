@@ -1,97 +1,121 @@
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * The Sample class which stores information about individual samples run in the mass spectrometer. For the purposes of
- * our study, four experimental groups are defined, LF/LB/HF/HB, where LF represents a low fat diet, HF represents a
- * high fat diet, and LB/HB represent the respective diets with 1.5X BCAA supplementation for 12 weeks.
+ * The Sample class which stores information about individual samples run in the
+ * mass spectrometer. For the purposes of
+ * our study, four experimental groups are defined, LF/LB/HF/HB, where LF
+ * represents a low fat diet, HF represents a
+ * high fat diet, and LB/HB represent the respective diets with 1.5X BCAA
+ * supplementation for 12 weeks.
+ * 
  * @author David Zhao
  * @author https://github.com/david-zhao-0
  * 
- * @param name name of the sample 
- * @param sampleType for our experiments we distinguished between LF/LB/HF/HB
+ * @param name        name of the sample
+ * @param sampleType  for our experiments we distinguished between LF/LB/HF/HB
  * @param metabolites the metabolites to consider for this sample
  * 
  */
 
 public class Sample implements Comparable<Sample> {
 	private String name;
-	private String sampleType;
+	private int sampleType = -1, sampleNumber = -1, timePoint = -1;
 	private List<Metabolite> metabolites;
-	
+
 	public Sample(String name, List<Metabolite> metaboliteList) {
 		this.name = name;
 		this.metabolites = metaboliteList;
 	}
-	
-	// Copy constructor
-	public Sample(Sample sample) {
-		this.name = sample.name;
-		this.sampleType = sample.sampleType;
-		this.metabolites = sample.metabolites;
-	}
-	
-	// Name Getter
+
 	public String getName() {
 		return name;
 	}
-	
-	// Name Setter
-	public void setName(String newName) {
-		this.name = newName;
-	}
-	
-	// Sample type getter
-	public String getSampleType() {
+
+	public int getSampleType() {
 		return sampleType;
 	}
 
-	// Sample type setter
-	public void setSampleType(String sampleName) {
-		if (sampleName.contains("LF")) {
-			this.sampleType = "LF";
-		} else if (sampleName.contains("LB")) {
-			this.sampleType = "LB";
-		} else if (sampleName.contains("HF")) {
-			this.sampleType = "HF";
-		} else if (sampleName.contains("HB")) {
-			this.sampleType = "HB";
-		} else {
-			this.sampleType = "N/A";
-		}
+	public int getSampleNumber() {
+		return sampleNumber;
 	}
-	
-	public int getSortOrder() {
-		switch (name.substring(0, 2)) {
-		case "LF":
-			return 0;
-		case "LB":
-			return 1;
-		case "HF":
-			return 2;
-		case "HB":
-			return 3;
-		default:
-			return -1;
-		}
+
+	public int getTimePoint() {
+		return timePoint;
 	}
-	
-	// metabolites getter
+
 	public List<Metabolite> getMetabolites() {
 		return this.metabolites;
 	}
-	
-	// metabolites setter
-	public void addMetabolite(Metabolite metabolite) {
-		this.metabolites.add(metabolite);
+
+	public void setSampleType(int sampleType) {
+		this.sampleType = sampleType;
 	}
-	
-	public void setMetaboliteList(ArrayList<Metabolite> mList) {
-		this.metabolites = (List<Metabolite>) mList.clone();		
+
+	public void setSampleNumber(int sampleNumber) {
+		this.sampleNumber = sampleNumber;
+	}
+
+	public void setTimePoint(int timePoint) {
+		this.timePoint = timePoint;
 	}
 
 	@Override
-	public int compareTo(Sample o) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'compareTo'");
+	public int compareTo(Sample s) {
+		int result = this.sampleType - s.getSampleType();
+		if (result == 0) {
+			result = this.sampleNumber - s.getSampleNumber();
+			if (result == 0) {
+				result = this.timePoint - s.getTimePoint();
+			}
+		}
+		return result;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Sample) {
+			return ((Sample) o).getSampleType() == this.getSampleType()
+					&& ((Sample) o).getSampleNumber() == this.getSampleNumber()
+					&& ((Sample) o).getTimePoint() == this.getTimePoint();
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * This method is used to extract sample information from the name of the
+	 * sample. As this implementation is highly specific to my problem, this should
+	 * be rewritten for other applications, or the Sample class should be extracted
+	 * to an interface.
+	 * 
+	 * @param sampleName the string to be processed to get data for fields in Sample
+	 */
+
+	public void getSampleInformationFromSampleName() throws InvalidSampleName {
+		if (this.getTimePoint() < 0 || this.getSampleType() < 0 || this.getSampleNumber() < 0) {
+			Pattern pattern = Pattern.compile("([L|H][F|B])(\\d+)[_](\\d+)");
+			Matcher matcher = pattern.matcher(this.name);
+			if (matcher.find()) {
+				switch (matcher.group(1)) {
+					case "LF":
+						this.setSampleType(0);
+					case "LB":
+						this.setSampleType(1);
+					case "HF":
+						this.setSampleType(2);
+					case "HB":
+						this.setSampleType(3);
+				}
+				this.setSampleNumber(Integer.parseInt(matcher.group(2)));
+				this.setTimePoint(Integer.parseInt(matcher.group(3)));
+			} else {
+				throw new InvalidSampleName(this.getName());
+			}
+		} else {
+			return;
+		}
+	}
+
 }
