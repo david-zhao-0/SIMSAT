@@ -14,7 +14,9 @@ import java.util.*;
 public class Processor {
 	private String inputFilePath;
 	public static final String DELIMITER = ",";
+	public static final int[] PEAK_DATA_COLUMNS = new int[]{3, 5};
 	private static Set<Sample> samples = new TreeSet<>();
+	private static List<Sample> duplicateSamples = new ArrayList<>();
 
 	public static void main(String[] args) {
 		try {
@@ -49,14 +51,15 @@ public class Processor {
 			String[] delimitedLine = line.split(DELIMITER);
 			Sample currentSample = new Sample(delimitedLine[0], extractMetaboliteDataFromDelimitedString(delimitedLine));
 			try {
-				currentSample.getSampleInformationFromSampleName();
+			currentSample.getSampleInformationFromSampleName();
 			} catch (InvalidSampleName ex) {
 				System.out.println(ex.getMessage());
 			}
 			if (samples.add(currentSample)) {
 				line = reader.readLine();
 			} else {
-				System.out.println("Duplicate sample: " + currentSample.getName());
+				duplicateSamples.add(currentSample);
+				System.out.println("Warning: duplicate sample: " + currentSample.getName());
 				line = reader.readLine();
 			}
 		}
@@ -64,6 +67,11 @@ public class Processor {
 		reader.close();
 
 		for (Sample s : samples) {
+			writeSample(writer, s);
+		}
+
+		writer.write("\n\nDuplicate Samples:");
+		for (Sample s : duplicateSamples) {
 			writeSample(writer, s);
 		}
 
@@ -117,8 +125,8 @@ public class Processor {
 		List<Metabolite> metaboliteData = new ArrayList<>();
 		for (int i = 1; i < delimitedLine.length; i = i + Header.COLUMNS_PER_METABOLITE) {
 			Metabolite currentMetabolite = new Metabolite(delimitedLine[i]);
-			currentMetabolite.getPeakData()[0] = Double.parseDouble(delimitedLine[i + 3]);
-			currentMetabolite.getPeakData()[1] = Double.parseDouble(delimitedLine[i + 5]);
+			currentMetabolite.getPeakData()[0] = Double.parseDouble(delimitedLine[i + PEAK_DATA_COLUMNS[0]]);
+			currentMetabolite.getPeakData()[1] = Double.parseDouble(delimitedLine[i + PEAK_DATA_COLUMNS[1]]);
 			metaboliteData.add(currentMetabolite);
 		}
 		return metaboliteData;

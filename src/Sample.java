@@ -101,12 +101,16 @@ public class Sample implements Comparable<Sample> {
 				switch (matcher.group(1)) {
 					case "LF":
 						this.setSampleType(0);
+						break;
 					case "LB":
 						this.setSampleType(1);
+						break;
 					case "HF":
 						this.setSampleType(2);
+						break;
 					case "HB":
 						this.setSampleType(3);
+						break;
 				}
 				this.setSampleNumber(Integer.parseInt(matcher.group(2)));
 				this.setTimePoint(Integer.parseInt(matcher.group(3)));
