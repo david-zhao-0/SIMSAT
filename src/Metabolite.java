@@ -1,17 +1,13 @@
 /**
  * The Metabolite class which stores metabolite information and peak data. This class only supports the
- * comparison of two peaks for each metabolite.
+ * comparison of two isotope peaks for each metabolite.
  * 
  * @author David Zhao
  * @author https://github.com/david-zhao-0
  * 
  * @param name the name of the metabolite
- * @param peak1 lighter isotope m/z value
- * @param peak2 heavier isotope m/z
- * @param peak1Area lighter isotope peak area
- * @param peak2Area heavier isotope peak area
- * @param ratio peakArea1/peakArea2
- * 
+ * @param peakData contains peak areas for lighter and heavier isotopes
+ * @param ratio ratio of the lighter isotope to the heavier isotope
  */
 
 public class Metabolite {

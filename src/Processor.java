@@ -3,39 +3,43 @@ import java.util.*;
 
 /**
  * The Processor class which does the data processing by collecting a list of
- * samples from a csv
- * file.
+ * samples from a csv file.
  * 
- * @param inputFilePath        the path to the file to be read
- * @param metaboliteCount the amount of metabolites to be read for each sample
- * @param samples
+ * @param inputFilePath    the path to the file to be read
+ * @param samples          tree set of samples sorted by sample type, sample
+ *                         number, and timeframe.
+ * @param duplicateSamples contains samples with the same sample type, sample
+ *                         number, and timeframe.
  */
 
 public class Processor {
 	private String inputFilePath;
 	public static final String DELIMITER = ",";
-	public static final int[] PEAK_DATA_COLUMNS = new int[]{3, 5};
+	public static final int[] PEAK_DATA_COLUMNS = new int[] { 3, 5 };
 	private static final String DEFAULT_INPUT_FILE = "data.csv";
 	private static final String DEFAULT_OUTPUT_FILE = "processed_data.csv";
 	private static Set<Sample> samples = new TreeSet<>();
 	private static List<Sample> duplicateSamples = new ArrayList<>();
 
-	public static void main(String[] args) {
-		try {
-			process(DEFAULT_INPUT_FILE, DEFAULT_OUTPUT_FILE);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-
+	/**
+	 * Master method for processing input file to an output file.
+	 * 
+	 * @param inputFile the name of the input file, in the current directory
+	 * @param outputFile the name of the output file, in the current directory
+	 * @throws IOException
+	 */
 	public static void process(String inputFile, String outputFile) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 		BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
 
 		String[] delimitedFirstLine = reader.readLine().split(DELIMITER);
-		Header metaboliteHeaders = new Header(delimitedFirstLine, 0);
-		Header isotopeHeaders = new Header(delimitedFirstLine, 1);
-		Sample firstSample = new Sample(delimitedFirstLine[0], extractMetaboliteDataFromDelimitedString(delimitedFirstLine));
+
+		Header metaboliteHeaders = new MainHeader(delimitedFirstLine);
+		Header isotopeHeaders = new SubHeader(delimitedFirstLine);
+
+		Sample firstSample = new Sample(delimitedFirstLine[0],
+				extractMetaboliteData(delimitedFirstLine));
+
 		try {
 			firstSample.getSampleInformationFromSampleName();
 			samples.add(firstSample);
@@ -43,17 +47,16 @@ public class Processor {
 			System.out.println(ex.getMessage());
 		}
 
-		// write main and sub headers to file
-		writeHeader(writer, metaboliteHeaders);
-		writeHeader(writer, isotopeHeaders);
-
-		// reads row after first row
+		metaboliteHeaders.writeHeader(writer);
+		isotopeHeaders.writeHeader(writer);
+		
 		String line = reader.readLine();
-		while (line != null) {
+		while (line != null) { // process remaining data
 			String[] delimitedLine = line.split(DELIMITER);
-			Sample currentSample = new Sample(delimitedLine[0], extractMetaboliteDataFromDelimitedString(delimitedLine));
+			Sample currentSample = new Sample(delimitedLine[0],
+					extractMetaboliteData(delimitedLine));
 			try {
-			currentSample.getSampleInformationFromSampleName();
+				currentSample.getSampleInformationFromSampleName();
 			} catch (InvalidSampleName ex) {
 				System.out.println(ex.getMessage());
 			}
@@ -61,7 +64,7 @@ public class Processor {
 				line = reader.readLine();
 			} else {
 				duplicateSamples.add(currentSample);
-				System.out.println("Warning: duplicate sample: " + currentSample.getName());
+				System.out.println("WARNING: duplicate sample: " + currentSample.getName());
 				line = reader.readLine();
 			}
 		}
@@ -80,22 +83,15 @@ public class Processor {
 		writer.close();
 	}
 
-	private static void writeHeader(BufferedWriter writer, Header header) throws IOException {
-		writer.write(DELIMITER); // spacing to line up with data
-
-		if (header.getHeaderType() == 0) { // writes main headers
-			for (int i = 0; i < header.getHeaderList().size(); i++) {
-				writer.write(header.getHeaderList().get(i) + DELIMITER + DELIMITER + DELIMITER);
-			}
-		} else if (header.getHeaderType() == 1) { // write subheaders
-			for (int i = 0; i < header.getHeaderList().size(); i++) {
-				writer.write(header.getHeaderList().get(i) + DELIMITER);
-			}
-		}
-
-		writer.newLine();
-	}
-
+	/**
+	 * Defines pattern to write sample in. Default arrangment is the lighter isotope
+	 * followed by the heavier isotope and a space to match the spacing in between
+	 * the headers.
+	 * 
+	 * @param writer
+	 * @param sample
+	 * @throws IOException
+	 */
 	private static void writeSample(BufferedWriter writer, Sample sample) throws IOException {
 		writer.newLine();
 		writer.write(sample.getName() + DELIMITER);
@@ -121,10 +117,14 @@ public class Processor {
 	}
 
 	/**
+	 * Extracts metabolite data, including peak areas, from a delimited string,
+	 * adding the metabolite to a list of metabolites. Eventually this list of
+	 * metabolites is associated with a Sample.
+	 * 
 	 * @param delimitedLine the line read by the bufferedreader
 	 * @return the list of metabolites in the line of data.
 	 */
-	private static List<Metabolite> extractMetaboliteDataFromDelimitedString(String[] delimitedLine) {
+	private static List<Metabolite> extractMetaboliteData(String[] delimitedLine) {
 		List<Metabolite> metaboliteData = new ArrayList<>();
 		for (int i = 1; i < delimitedLine.length; i = i + Header.COLUMNS_PER_METABOLITE) {
 			Metabolite currentMetabolite = new Metabolite(delimitedLine[i]);
@@ -133,6 +133,14 @@ public class Processor {
 			metaboliteData.add(currentMetabolite);
 		}
 		return metaboliteData;
+	}
+
+	public static void main(String[] args) {
+		try {
+			process(DEFAULT_INPUT_FILE, DEFAULT_OUTPUT_FILE);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 }
