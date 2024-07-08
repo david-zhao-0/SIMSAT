@@ -15,20 +15,22 @@ public class Processor {
 	private String inputFilePath;
 	public static final String DELIMITER = ",";
 	public static final int[] PEAK_DATA_COLUMNS = new int[]{3, 5};
+	private static final String DEFAULT_INPUT_FILE = "data.csv";
+	private static final String DEFAULT_OUTPUT_FILE = "processed_data.csv";
 	private static Set<Sample> samples = new TreeSet<>();
 	private static List<Sample> duplicateSamples = new ArrayList<>();
 
 	public static void main(String[] args) {
 		try {
-			process();
+			process(DEFAULT_INPUT_FILE, DEFAULT_OUTPUT_FILE);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	public static void process() throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader("data.csv"));
-		BufferedWriter writer = new BufferedWriter(new FileWriter("processed_data.csv"));
+	public static void process(String inputFile, String outputFile) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
 
 		String[] delimitedFirstLine = reader.readLine().split(DELIMITER);
 		Header metaboliteHeaders = new Header(delimitedFirstLine, 0);
@@ -79,17 +81,18 @@ public class Processor {
 	}
 
 	private static void writeHeader(BufferedWriter writer, Header header) throws IOException {
-		writer.write(DELIMITER);
+		writer.write(DELIMITER); // spacing to line up with data
+
 		if (header.getHeaderType() == 0) { // writes main headers
 			for (int i = 0; i < header.getHeaderList().size(); i++) {
 				writer.write(header.getHeaderList().get(i) + DELIMITER + DELIMITER + DELIMITER);
 			}
-			
 		} else if (header.getHeaderType() == 1) { // write subheaders
 			for (int i = 0; i < header.getHeaderList().size(); i++) {
 				writer.write(header.getHeaderList().get(i) + DELIMITER);
 			}
 		}
+
 		writer.newLine();
 	}
 
